@@ -1,0 +1,3 @@
+[console_scripts]
+openclaude=claude_code.cli_entry:entry_point
+

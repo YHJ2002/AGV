@@ -5,7 +5,7 @@ from scheduler.TA_scheduler import TAScheduler
 
 from planner.astar_planner import AStarPlanner
 from planner.cbs_fw_planner import FixedWindowCBSPlanner
-from planner.dhc_planner import DHCPlanner
+# from planner.dhc_planner import DHCPlanner
 from core.env import Env
 from core.ordermanager import OrderManager
 from core.gridmap import GridMap
@@ -42,19 +42,21 @@ def build_planner(
         SimConfig.force_replan_every_step = False
         return FixedWindowCBSPlanner(env, agv_manager, ordermanager, grid_map, fault_manager)
 
-    elif SimConfig.planner_type == PlannerType.DHC:
-        SimConfig.force_replan_every_step = True
-
-        return DHCPlanner(
-            env,
-            agv_manager=agv_manager,
-            order_manager=ordermanager,
-            map=grid_map,
-            fault_manager=fault_manager,
-            model_path=SimConfig.dhc_model_path,
-            forward_steps=1,
-            device="cuda"
-        )
-
+    # elif SimConfig.planner_type == PlannerType.DHC:
+    #     SimConfig.force_replan_every_step = True
+    #
+    #     return DHCPlanner(
+    #         env,
+    #         agv_manager=agv_manager,
+    #         order_manager=ordermanager,
+    #         map=grid_map,
+    #         fault_manager=fault_manager,
+    #         model_path=SimConfig.dhc_model_path,
+    #         forward_steps=1,
+    #         device="cuda"
+    #     )
+    elif planner_type == PlannerType.DHC:
+        from planner.dhc_planner import DHCPlanner  # lazy import
+        return DHCPlanner(...)
     else:
         raise ValueError(f"Unknown planner: {SimConfig.planner_type}")

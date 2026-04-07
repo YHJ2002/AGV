@@ -29,8 +29,11 @@ class SimConfig:
     """Simulation configuration parameters"""
 
     # ==================== Algorithm selection ====================
-    scheduler_type: SchedulerType = SchedulerType.RANDOM
-    planner_type: PlannerType = PlannerType.ASTAR
+    # scheduler_type: SchedulerType = SchedulerType.RANDOM
+     # planner_type: PlannerType = PlannerType.ASTAR
+    # force_replan_every_step: bool = False
+    scheduler_type: SchedulerType = SchedulerType.TA
+    planner_type: PlannerType = PlannerType.ASTAR  # 或 PlannerType.CBS_FW
     force_replan_every_step: bool = False
     # Whether to force each decision-making AGV to replan its path at every step.
     # Automatically coupled with DHC when enabled.
@@ -38,8 +41,10 @@ class SimConfig:
     dhc_model_path: str = '.\\algorithm\\DHC\\models\\36000.pth'
 
     # ==================== Simulation parameters ====================
-    order_mode: OrderMode = OrderMode.CONTINUOUS_CONSTANT  # Order generation mode
-    total_orders_limit = 150
+    #order_mode: OrderMode = OrderMode.CONTINUOUS_CONSTANT  # Order generation mode
+    order_mode: OrderMode = OrderMode.ONESHOT
+    total_orders_limit = 50  # 先小一点，跑通后再加
+    #total_orders_limit = 150
 
     size2_ratio: float = 0.2
     # Proportion of size-2 orders among all orders, range: 0.0 ~ 1.0
@@ -76,8 +81,9 @@ class SimConfig:
 # ==================== Fault management configuration ====================
 @dataclass
 class FaultConfig:
-    enable_faults: bool = True
 
+    # enable_faults: bool = True
+    enable_faults: bool = False
     # Fault probability per AGV per step
     fault_prob: float = 0.01
 

@@ -1,0 +1,270 @@
+Metadata-Version: 2.3
+Name: openclaudecode
+Version: 0.1.33
+Summary: Claude Code - An AI-powered code assistant with comprehensive tools
+License: MIT
+Keywords: ai,code-assistant,llm,claude,development
+Author: OpenClaudeCode Team
+Requires-Python: >=3.11,<4.0
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Project-URL: Repository, https://github.com/openclaudecode/openclaudecode
+Description-Content-Type: text/markdown
+
+# Claude Code
+
+An AI-powered development assistant with comprehensive tools for code analysis, file operations, web research, and task management. Built with Ollama integration and inspired by Anthropic's Claude Code.
+
+## Features
+
+### 🛠️ Comprehensive Tool Suite
+- **File Operations**: Read, write, edit files with advanced string replacement
+- **Search & Discovery**: Glob patterns, regex search, directory listing
+- **Code Execution**: Bash command execution with safety checks
+- **Jupyter Support**: Read and edit notebook cells
+- **Web Integration**: Fetch and analyze web content
+- **Task Management**: Built-in todo system for complex workflows
+
+### 🤖 AI Agent Modes
+- **Autonomous Mode**: Agent works step-by-step with full tool access
+- **Interactive Mode**: Manual control over each tool execution
+- **Chat Mode**: Direct conversation without tools
+- **Streaming Mode**: Real-time response streaming
+
+### 🎨 Rich Terminal UI
+- Claude-inspired color scheme and branding
+- Syntax highlighting for code blocks
+- Interactive file and command completion
+- Structured output with panels and tables
+- Live context display
+
+### 🔧 Model Integration
+- **Default Model**: qwen2.5:7b-instruct (efficient and capable)
+- **Ollama Backend**: Local model hosting for privacy
+- **Configurable Context**: Adjustable context window sizes
+- **Tool Schema**: Comprehensive function calling support
+
+## Installation
+
+### Prerequisites
+- Python 3.11+
+- Ollama server running locally or remotely
+- qwen2.5:7b-instruct model (or configure alternative)
+
+### Install from Source
+```bash
+git clone https://github.com/openclaudecode/openclaudecode.git
+cd openclaudecode
+pip install -e .
+```
+
+### Pull Required Model
+```bash
+ollama pull qwen2.5:7b-instruct
+```
+
+## Quick Start
+
+### Basic Usage
+```bash
+# Start Claude Code in current directory
+claude
+
+# Specify workspace and model
+claude --workspace /path/to/project --model qwen2.5:7b-instruct
+
+# Run with custom Ollama host
+claude --host http://192.168.1.100:11434
+
+# Execute single query
+claude --query "analyze the project structure"
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Show available commands |
+| `/read <file>` | Read file with syntax highlighting |
+| `/write <file>` | Write content to file |
+| `/edit <file>` | Interactive file editing |
+| `/ls <path>` | List directory contents |
+| `/grep <pattern>` | Search files with regex |
+| `/bash <command>` | Execute shell command |
+| `/todo` | View/manage todo list |
+| `/chat <message>` | Chat without tools |
+| `/stream <message>` | Stream response |
+| `/interactive <message>` | Interactive mode |
+| `@filename` | Add file to context |
+
+### Example Workflow
+```bash
+# Start Claude Code
+claude
+
+# Add files to context
+@src/main.py
+@tests/test_main.py
+
+# Analyze and improve code
+> analyze the code structure and suggest improvements
+
+# Execute suggested changes
+> implement the logging improvements you suggested
+
+# Run tests
+/bash python -m pytest tests/
+
+# Create documentation
+> create comprehensive README.md for this project
+```
+
+## Configuration
+
+### Model Configuration
+```bash
+# List available models
+ollama list
+
+# Use different model
+claude --model llama2:7b
+
+# Adjust context size
+claude --num-ctx 8192
+```
+
+### Host Configuration
+```bash
+# Local Ollama (default)
+claude --host http://localhost:11434
+
+# Remote Ollama
+claude --host http://192.168.1.100:11434
+
+# Custom port
+claude --host http://localhost:8080
+```
+
+## Tool Reference
+
+### File Operations
+- **read**: Read files with line numbers and syntax detection
+- **write**: Create or overwrite files completely
+- **edit**: Precise string replacement with conflict detection
+- **multiedit**: Atomic multiple edits in single operation
+
+### Search & Discovery
+- **glob**: Fast pattern-based file finding (`*.py`, `**/*.js`)
+- **grep**: Content search with regex support
+- **ls**: Directory listing with ignore patterns
+
+### Code Execution
+- **bash**: Safe command execution with timeout and output limits
+
+### Specialized
+- **notebook_read/edit**: Jupyter notebook cell manipulation
+- **web_fetch**: Web content retrieval and analysis
+- **todo_read/write**: Session task management
+- **task**: Autonomous sub-agent deployment
+
+## Security
+
+### Command Safety
+- Dangerous command patterns blocked
+- Execution timeouts prevent hanging
+- Output size limits prevent overflow
+- Workspace isolation for file operations
+
+### Privacy
+- Local model execution (no external API calls)
+- Workspace-scoped file access
+- No data transmission to external services
+
+## Development
+
+### Project Structure
+```
+claude_code/
+├── src/
+│   ├── app.py          # Main CLI application
+│   ├── agent.py        # AI agent orchestrator
+│   ├── llm.py          # Ollama client
+│   └── tools.py        # Tool implementations
+├── cli_entry.py        # CLI entry point
+└── __init__.py
+```
+
+### Testing
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run specific test
+pytest tests/test_tools.py::test_read_file
+```
+
+### Contributing
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## Troubleshooting
+
+### Common Issues
+
+**Model not found**
+```bash
+# Pull the required model
+ollama pull qwen2.5:7b-instruct
+
+# Or use different model
+claude --model llama2:7b
+```
+
+**Connection refused**
+```bash
+# Start Ollama service
+ollama serve
+
+# Check if running
+curl http://localhost:11434/api/tags
+```
+
+**Permission errors**
+```bash
+# Ensure proper workspace permissions
+chmod -R 755 /path/to/workspace
+```
+
+### Performance Tuning
+
+**Memory optimization**
+```bash
+# Reduce context size for lower memory usage
+claude --num-ctx 2048
+```
+
+**Response speed**
+```bash
+# Use smaller, faster model
+claude --model qwen2.5:1.5b
+```
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Acknowledgments
+
+- Inspired by Anthropic's Claude Code
+- Built with Ollama for local AI execution
+- Powered by qwen2.5 model family
+- Rich terminal UI with Python Rich library
