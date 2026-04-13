@@ -176,6 +176,8 @@ async def main():
     # HTTP 静态服务放在线程中，主协程专注 WebSocket 与生命周期控制
     threading.Thread(target=start_http_server, args=(http_port,), daemon=True).start()
 
+
+    # 自动打开前端页面
     frontend_url = f"http://localhost:{http_port}/frontend/index.html"
     webbrowser.open(frontend_url)
     print(f"Opening browser at {frontend_url}")
