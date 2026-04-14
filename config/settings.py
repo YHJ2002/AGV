@@ -50,7 +50,7 @@ class SimConfig:
     order_mode: OrderMode = OrderMode.ONESHOT
     # 订单生成模式：当前是一次性生成
 
-    total_orders_limit = 50
+    total_orders_limit = 100
     # 订单总数上限：先设 50 跑通，调试完再加大
 
     size2_ratio: float = 0.2

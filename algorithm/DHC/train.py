@@ -16,13 +16,15 @@ random.seed(0)
 
 
 def main(num_actors=configs.num_actors, log_interval=configs.log_interval):
+    # 初始化 Ray，buffer / learner / actor 都作为远程对象运行。
     ray.init()
-    # ray.init(local_mode=True)   # 这行最重要！！
+    # ray.init(local_mode=True)   # 本地调试时可以打开
 
     buffer = GlobalBuffer.remote()
     learner = Learner.remote(buffer)
     time.sleep(1)
-    # actors = [Actor.remote(i, 0.4**(1+(i/(num_actors-1))*7), learner, buffer) for i in range(num_actors)]
+
+    # 为不同 actor 分配不同的 epsilon，形成从探索到利用的梯度。
     if num_actors == 1:
         actors = [Actor.remote(0, 0.4, learner, buffer)]
     else:
@@ -31,6 +33,7 @@ def main(num_actors=configs.num_actors, log_interval=configs.log_interval):
     for actor in actors:
         actor.run.remote()
 
+    # 回放池预热到足够样本量之前，只进行收集和状态打印。
     while not ray.get(buffer.ready.remote()):
         time.sleep(5)
         ray.get(learner.stats.remote(5))
@@ -46,6 +49,7 @@ def main(num_actors=configs.num_actors, log_interval=configs.log_interval):
         done = ray.get(learner.stats.remote(log_interval))
         ray.get(buffer.stats.remote(log_interval))
         print()
+
 
 if __name__ == '__main__':
     main()
