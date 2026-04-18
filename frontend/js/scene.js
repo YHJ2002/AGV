@@ -1,17 +1,11 @@
 // scene.js
-import { AGV } from './entities/agv.js';
-import { Shelf } from './entities/shelf.js';
-import { Box } from './entities/box.js';
-import { Obstacle } from './entities/obstacle.js';
-import { RestArea } from './entities/restArea.js';
-import { ReceiveArea } from './entities/receiveArea.js';
 import { SafePathRenderer } from './entities/safePathRenderer.js';
 import { OrbitControls } from "https://unpkg.com/three@0.112/examples/jsm/controls/OrbitControls.js";
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 function createScene() {
-  // ---------------- 场景 & 渲染器 ----------------
+  // ---------------- Scene & Renderer ----------------
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x141319);
 
@@ -23,7 +17,6 @@ function createScene() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.getElementById('container').appendChild(renderer.domElement);
 
-  // 创建标签渲染器
   const labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
   labelRenderer.domElement.style.position = 'absolute';
@@ -40,7 +33,7 @@ function createScene() {
   controls.maxDistance = 100;
   controls.maxPolarAngle = Math.PI / 2;
 
-  // ---------------- 光照 ----------------
+  // ---------------- Lighting ----------------
   const light = new THREE.DirectionalLight(0xffffff, 1);
   light.position.set(10, 20, 10);
   scene.add(light);
@@ -48,14 +41,16 @@ function createScene() {
   const ambient = new THREE.AmbientLight(0xaaaaaa, 0.5);
   scene.add(ambient);
 
-  // ---------------- 坐标轴辅助线 ----------------
+  // ---------------- Helpers ----------------
   const axesHelper = new THREE.AxesHelper(30);
   scene.add(axesHelper);
 
-  // ---------------- 世界容器 ----------------
+  // ---------------- World Container ----------------
   const world = {
     scene,
     mapSize: null,
+    mapGrid: null,
+    floor: null,
     agvs: new Map(),
     shelves: new Map(),
     boxes: new Map(),
@@ -63,19 +58,62 @@ function createScene() {
     restAreas: new Map(),
     receiveAreas: new Map(),
 
+    clear() {
+      if (this.mapGrid) {
+        this.scene.remove(this.mapGrid);
+        this.mapGrid = null;
+      }
+      if (this.floor) {
+        this.scene.remove(this.floor);
+        this.floor = null;
+      }
+
+      for (const agv of this.agvs.values()) {
+        this.scene.remove(agv.mesh);
+      }
+      for (const shelf of this.shelves.values()) {
+        this.scene.remove(shelf.mesh);
+      }
+      for (const box of this.boxes.values()) {
+        this.scene.remove(box.mesh);
+      }
+      for (const obstacle of this.obstacles.values()) {
+        this.scene.remove(obstacle.mesh);
+      }
+      for (const restArea of this.restAreas.values()) {
+        this.scene.remove(restArea.mesh);
+      }
+      for (const receiveArea of this.receiveAreas.values()) {
+        this.scene.remove(receiveArea.mesh);
+      }
+
+      this.agvs.clear();
+      this.shelves.clear();
+      this.boxes.clear();
+      this.obstacles.clear();
+      this.restAreas.clear();
+      this.receiveAreas.clear();
+      this.mapSize = null;
+
+      if (this.safePathRenderer) {
+        this.safePathRenderer.updatePaths({});
+      }
+    },
+
     addMap(mapSize) {
+      // 新 init 进来时先清空旧场景，保证 reset 幂等。
+      this.clear();
+
       this.mapSize = mapSize;
       const grid = new THREE.Group();
       const material = new THREE.LineBasicMaterial({ color: 0xffffff });
 
-      // 竖线
       for (let x = 0; x <= mapSize.width; x++) {
         const points = [new THREE.Vector3(x, 0.01, 0), new THREE.Vector3(x, 0.01, mapSize.height)];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         grid.add(new THREE.Line(geometry, material));
       }
 
-      // 横线
       for (let z = 0; z <= mapSize.height; z++) {
         const points = [new THREE.Vector3(0, 0.01, z), new THREE.Vector3(mapSize.width, 0.01, z)];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -83,8 +121,8 @@ function createScene() {
       }
 
       this.scene.add(grid);
+      this.mapGrid = grid;
 
-      // 地板
       const geometry = new THREE.PlaneGeometry(mapSize.width, mapSize.height);
       const materialFloor = new THREE.MeshPhongMaterial({ color: 0xaca7fb });
       const floor = new THREE.Mesh(geometry, materialFloor);
@@ -92,9 +130,9 @@ function createScene() {
       floor.position.x = mapSize.width / 2;
       floor.position.z = mapSize.height / 2;
       this.scene.add(floor);
+      this.floor = floor;
     },
 
-    // ---------------- AGV ----------------
     addAGV(agv) {
       this.agvs.set(agv.id, agv);
       this.scene.add(agv.mesh);
@@ -129,18 +167,15 @@ function createScene() {
     }
   };
 
-  // 创建 SafePathRenderer
   world.safePathRenderer = new SafePathRenderer(scene);
 
-  // ---------------- 自适应窗口 ----------------
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.setSize(window.innerWidth, window.innerHeight); // 同步标签渲染器
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  //暴露给全局控制面板使用
   window.sceneWorld = world;
 
   return { scene, camera, renderer, world, controls, labelRenderer };
@@ -151,7 +186,7 @@ function renderLoop(renderer, labelRenderer, scene, camera, controls) {
     requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
-    labelRenderer.render(scene, camera); // 渲染标签
+    labelRenderer.render(scene, camera);
   }
   animate();
 }

@@ -13,18 +13,19 @@ function connectWebSocket(world) {
   ws = new WebSocket("ws://localhost:8765");
 
   ws.onmessage = (event) => {
-    // try {
-    //   const data = JSON.parse(event.data);
-    //   console.log("收到数据:", data);
-    // } catch (err) {
-    //   console.error("JSON 解析失败:", event.data, err);
-    // }
     const data = JSON.parse(event.data);
-    console.log("get data: ",data)
+    console.log("get data: ", data);
+
+    if (data.type === "reset") {
+      // 后端进入重置流程时先清空旧场景，避免新 init 叠加到旧对象上。
+      world.clear();
+      updateOrderPanel([]);
+      return;
+    }
+
     if (data.type === "init") {
-      // 初始化地图和对象 ...
       world.addMap(data.map_size);
-      
+
       if (data.boxes) {
         for (const boxId in data.boxes) {
           const box = data.boxes[boxId];
@@ -32,7 +33,6 @@ function connectWebSocket(world) {
           const size = box.size;
           world.addBox(new Box(parseInt(boxId), pos, size));
           world.addShelf(new Shelf(parseInt(boxId), pos, size));
-          
         }
       }
 
@@ -63,8 +63,8 @@ function connectWebSocket(world) {
         });
       }
     }
+
     if (data.type === "update") {
-      // 更新 AGV 位置
       if (data.agvs) {
         for (const key in data.agvs) {
           const pos = data.agvs[key];
@@ -73,22 +73,20 @@ function connectWebSocket(world) {
         }
       }
 
-      // 直接更新 Box 坐标（AGV 上和 shelf 上分开处理）
       if (data.boxes_on_agv) {
         for (const [boxId, pos] of Object.entries(data.boxes_on_agv)) {
           const box = world.boxes.get(parseInt(boxId));
-          if (box) box.update(pos, 0.55); // y = 0.5 高度
+          if (box) box.update(pos, 0.55);
         }
       }
 
       if (data.boxes_on_shelf) {
         for (const [boxId, pos] of Object.entries(data.boxes_on_shelf)) {
           const box = world.boxes.get(parseInt(boxId));
-          if (box) box.update(pos, 0.7); // y = 0.5 高度
+          if (box) box.update(pos, 0.7);
         }
       }
 
-      //更新安全路径
       if (data.safe_paths) {
         world.safePathRenderer.updatePaths(data.safe_paths);
       }
@@ -101,6 +99,7 @@ function connectWebSocket(world) {
         updateOrderPanel(data.orders);
       }
     }
+
     if (data.type === "init" && data.orders) {
       updateOrderPanel(data.orders);
     }
