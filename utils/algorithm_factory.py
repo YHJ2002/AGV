@@ -55,7 +55,7 @@ def build_planner(
     #         forward_steps=1,
     #         device="cuda"
     #     )
-    elif planner_type == PlannerType.DHC:
+    elif SimConfig.planner_type == PlannerType.DHC:
         from planner.dhc_planner import DHCPlanner  # lazy import
         return DHCPlanner(...)
     else:

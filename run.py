@@ -85,24 +85,28 @@ async def simulator_loop(websocket, message_queue):
             clock.reset()
             global_logger.reset()
 
-            # D. 重置环境对象。
-            # env.reset() 内部已经会重置 AGV / 地图 / 订单，避免重复重置导致状态不一致。
-            env.reset()
+            # D. 重置核心业务对象
+            grid_map.reset_map()         # 重置地图：恢复货箱状态、清空动态占用
+            ordermanager.reset_order()   # 重置订单：清空未处理/处理中/已完成订单
+            agv_manager.reset_agvs()     # 重置 AGV：回到初始位置、清空任务状态
             fault_manager.reset()        # 重置故障管理状态
 
-            # E. 重新创建调度器和规划器
+            # E. 重置环境
+            env.reset()
+
+            # F. 重新创建调度器和规划器
             # 避免它们内部仍持有旧状态
             scheduler = build_scheduler(env, agv_manager, ordermanager, grid_map, fault_manager)
             planner = build_planner(env, agv_manager, ordermanager, grid_map, fault_manager)
 
-            # F. 重新创建仿真器，确保引用的是重置后的对象
+            # G. 重新创建仿真器，确保引用的是重置后的对象
             simulator = Simulator(grid_map, agv_manager, ordermanager, env, scheduler, planner)
 
-            # G. 清空消息队列，避免 reset 前残留的 fault 命令继续生效
+            # H. 清空消息队列，避免 reset 前残留的 fault 命令继续生效
             while not message_queue.empty():
                 _ = await message_queue.get()
 
-            # H. 重新发送 init 数据，让前端用新状态重建场景
+            # I. 重新发送 init 数据，让前端用新状态重建场景
             init_data = generate_send_data(grid_map, agv_manager, ordermanager, data_type="init")
             await websocket.send(json.dumps(init_data))
 
@@ -141,9 +145,7 @@ async def simulator_loop(websocket, message_queue):
             await asyncio.sleep(0.1)
 
         # -------------------- 自然结束后的等待态 --------------------
-        # 只有在仿真自然结束时才打印最终统计。
-        # 如果是用户主动 stop，RUNNING 已经被置为 False，此时不应再输出“等待 reset 或 stop”。
-        if RUNNING and not NEED_RESET:
+        if not NEED_RESET:
             print("All orders completed or max steps reached; waiting for reset or stop.")
             global_logger.add_runtime_log(global_logger.get_final_metrics(clock.now()))
             print(global_logger.get_final_metrics(clock.now()))

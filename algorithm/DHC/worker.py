@@ -173,16 +173,17 @@ class GlobalBuffer:
             weights = np.power(priorities / min_p, -self.beta)
 
             data = (
-                torch.from_numpy(np.stack(b_obs).astype(np.float16)),
+                # CPU 训练时卷积层与 float16 输入不兼容，这里统一使用 float32。
+                torch.from_numpy(np.stack(b_obs).astype(np.float32)),
                 torch.LongTensor(b_action).unsqueeze(1),
-                torch.HalfTensor(b_reward).unsqueeze(1),
-                torch.HalfTensor(b_done).unsqueeze(1),
-                torch.HalfTensor(b_steps).unsqueeze(1),
+                torch.FloatTensor(b_reward).unsqueeze(1),
+                torch.FloatTensor(b_done).unsqueeze(1),
+                torch.FloatTensor(b_steps).unsqueeze(1),
                 torch.LongTensor(b_seq_len),
-                torch.from_numpy(np.concatenate(b_hidden)),
+                torch.from_numpy(np.concatenate(b_hidden).astype(np.float32)),
                 torch.from_numpy(np.stack(b_comm_mask)),
                 idxes,
-                torch.from_numpy(weights).unsqueeze(1),
+                torch.from_numpy(weights.astype(np.float32)).unsqueeze(1),
                 self.ptr
             )
 
@@ -315,7 +316,7 @@ class Learner:
         self.learning_thread.start()
 
     def train(self):
-        scaler = GradScaler()
+        scaler = GradScaler(enabled=torch.cuda.is_available())
 
         while not ray.get(self.buffer.check_done.remote()) and self.counter < configs.training_times:
             for i in range(1, 10001):
@@ -328,7 +329,8 @@ class Learner:
                 b_hidden = b_hidden.to(self.device)
                 b_comm_mask = b_comm_mask.to(self.device)
 
-                b_next_seq_len = [(seq_len + forward_steps).item() for seq_len, forward_steps in zip(b_seq_len, b_steps)]
+                # 下一状态序列长度 = 当前有效历史长度 + n-step 前瞻步数。
+                b_next_seq_len = [(seq_len + step_count).item() for seq_len, step_count in zip(b_seq_len, b_steps)]
                 b_next_seq_len = torch.LongTensor(b_next_seq_len)
 
                 with torch.no_grad():

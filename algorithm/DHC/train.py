@@ -17,7 +17,13 @@ random.seed(0)
 
 def main(num_actors=configs.num_actors, log_interval=configs.log_interval):
     # 初始化 Ray，buffer / learner / actor 都作为远程对象运行。
-    ray.init()
+   # ray.init()
+    ray.init(
+    ignore_reinit_error=True,
+    _temp_dir="D:/ray_tmp",
+    include_dashboard=False,
+    logging_level="ERROR"
+)
     # ray.init(local_mode=True)   # 本地调试时可以打开
 
     buffer = GlobalBuffer.remote()

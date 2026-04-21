@@ -35,7 +35,7 @@ class SimConfig:
     scheduler_type: SchedulerType = SchedulerType.TA
     # 调度算法：当前用 TA 算法
 
-    planner_type: PlannerType = PlannerType.ASTAR
+    planner_type: PlannerType = PlannerType.CBS_FW
     # 路径规划：当前用 A*
     # 可切换：ASTAR / CBS_FW / DHC
 
@@ -50,7 +50,7 @@ class SimConfig:
     order_mode: OrderMode = OrderMode.ONESHOT
     # 订单生成模式：当前是一次性生成
 
-    total_orders_limit = 100
+    total_orders_limit = 50
     # 订单总数上限：先设 50 跑通，调试完再加大
 
     size2_ratio: float = 0.2
@@ -59,7 +59,7 @@ class SimConfig:
     order_processing_timeout: int = 30
     # 订单超时时间：30 步没完成就重新排队
 
-    order_seed: Optional[int] = None
+    order_seed: Optional[int] = 42
     # 订单随机种子：固定值 = 每次生成一样的订单
 
     # ==================== 地图与仿真步数 ====================

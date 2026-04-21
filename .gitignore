@@ -5,4 +5,8 @@
 __pycache__/
 .vscode/
 algorithm/DHC/models/
-logs/
+logs/.venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
