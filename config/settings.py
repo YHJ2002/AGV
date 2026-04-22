@@ -35,7 +35,7 @@ class SimConfig:
     scheduler_type: SchedulerType = SchedulerType.TA
     # 调度算法：当前用 TA 算法
 
-    planner_type: PlannerType = PlannerType.CBS_FW
+    planner_type: PlannerType = PlannerType.DHC
     # 路径规划：当前用 A*
     # 可切换：ASTAR / CBS_FW / DHC
 
@@ -43,7 +43,7 @@ class SimConfig:
     # 是否每一步都强制重新规划路径
     # 开启 = 更灵活，但计算量大
 
-    dhc_model_path: str = '.\\algorithm\\DHC\\models\\36000.pth'
+    dhc_model_path: str = '.\\algorithm\\server\\20000.pth'
     # DHC 深度学习模型路径
 
     # ==================== 订单参数 ====================

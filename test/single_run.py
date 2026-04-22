@@ -11,8 +11,14 @@ import os
 import argparse
 import csv
 import random
+import sys
 import numpy as np
 from typing import List, Dict
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # 系统配置项：包含仿真配置和故障配置
 from config.settings import SimConfig, FaultConfig
@@ -227,7 +233,7 @@ def main():
     5. 保存结果到 CSV
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--runs", type=int, default=100)     # 实验轮数
+    parser.add_argument("--runs", type=int, default=1)     # 实验轮数
     parser.add_argument("--seed", type=int, default=42)      # 初始随机种子
     parser.add_argument("--out_dir", type=str, default="test/single")  # 输出目录
     args = parser.parse_args()

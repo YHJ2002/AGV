@@ -1,0 +1,3 @@
+Tasks Completed,Task Success Rate,Total Task Time,Avg Task Time,Throughput,Total AGV Collisions,Scheduler Calls,Scheduler Total Time,Scheduler Avg Time,Planner Calls,Planner Total Time,Planner Avg Time,Decision Total Time,Sim Steps,seed,finished,sim_steps
+7,0.14,294.0,42.0,0.007,5831,1000,0.004608900751918554,4.608900751918555e-06,1000,38.86600250285119,0.03886600250285119,38.87061140360311,1000,42,False,1000
+7.0,0.14,294.0,42.0,0.007,5831.0,1000.0,0.004608900751918554,4.608900751918555e-06,1000.0,38.86600250285119,0.03886600250285119,38.87061140360311,1000.0,avg,0.0,1000.0

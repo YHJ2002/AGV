@@ -56,7 +56,18 @@ def build_planner(
     #         device="cuda"
     #     )
     elif SimConfig.planner_type == PlannerType.DHC:
+        import torch
         from planner.dhc_planner import DHCPlanner  # lazy import
-        return DHCPlanner(...)
+        SimConfig.force_replan_every_step = True
+        return DHCPlanner(
+            env,
+            agv_manager=agv_manager,
+            order_manager=ordermanager,
+            map=grid_map,
+            fault_manager=fault_manager,
+            model_path=SimConfig.dhc_model_path,
+            forward_steps=1,
+            device="cuda" if torch.cuda.is_available() else "cpu"
+        )
     else:
         raise ValueError(f"Unknown planner: {SimConfig.planner_type}")

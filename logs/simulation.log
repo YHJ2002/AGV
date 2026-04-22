@@ -1,163 +1,24 @@
-[15:44:14] [OrderManager] Step 0: Accepted 50 new orders. Total orders: 50
-[15:44:15] [OrderManager] Order 7 completed by AGV 10 at step 13.
-[15:44:15] [OrderManager] Order 38 completed by AGV 7 at step 15.
-[15:44:15] [OrderManager] Order 21 completed by AGV 9 at step 15.
-[15:44:15] [OrderManager] Order 20 completed by AGV 6 at step 18.
-[15:44:15] [OrderManager] Order 31 completed by AGV 4 at step 19.
-[15:44:15] [OrderManager] Order 34 completed by AGV 5 at step 19.
-[15:44:15] [OrderManager] Order 35 completed by AGV 8 at step 21.
-[15:44:15] [OrderManager] Order 6 completed by AGV 0 at step 22.
-[15:44:15] [OrderManager] Order 11 completed by AGV 3 at step 23.
-[15:44:15] [OrderManager] Order 8 completed by AGV 2 at step 26.
-[15:44:15] [OrderManager] Order 49 completed by AGV 13 at step 27.
-[15:44:15] [OrderManager] Order 25 completed by AGV 1 at step 28.
-[15:44:15] [OrderManager] Order 40 completed by AGV 11 at step 30.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 43 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 43 completed by AGV 12 at step 38.
-[15:44:15] [OrderManager] Order 4 completed by AGV 10 at step 44.
-[15:44:15] [OrderManager] Order 32 completed by AGV 9 at step 47.
-[15:44:15] [OrderManager] Order 16 completed by AGV 8 at step 50.
-[15:44:15] [OrderManager] Order 17 completed by AGV 7 at step 52.
-[15:44:15] [OrderManager] Order 5 completed by AGV 0 at step 56.
-[15:44:15] [OrderManager] Order 14 completed by AGV 2 at step 61.
-[15:44:15] [OrderManager] Order 23 completed by AGV 5 at step 61.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 0 completed by AGV 6 at step 63.
-[15:44:15] [OrderManager] Order 9 completed by AGV 3 at step 69.
-[15:44:15] [OrderManager] Order 13 completed by AGV 1 at step 70.
-[15:44:15] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 1 completed by AGV 4 at step 84.
-[15:44:15] [OrderManager] Order 42 completed by AGV 12 at step 84.
-[15:44:15] [OrderManager] Order 24 completed by AGV 10 at step 85.
-[15:44:15] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 3 completed by AGV 7 at step 89.
-[15:44:15] [OrderManager] Order 45 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 47 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 48 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 29 completed by AGV 8 at step 94.
-[15:44:15] [OrderManager] Order 45 completed by AGV 11 at step 97.
-[15:44:15] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 18 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 18 completed by AGV 0 at step 103.
-[15:44:15] [OrderManager] Order 19 completed by AGV 3 at step 107.
-[15:44:15] [OrderManager] Order 30 completed by AGV 5 at step 108.
-[15:44:15] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 37 completed by AGV 6 at step 110.
-[15:44:15] [OrderManager] Order 39 completed by AGV 2 at step 111.
-[15:44:15] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 15 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 15 completed by AGV 9 at step 124.
-[15:44:15] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 47 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 48 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 2 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 2 completed by AGV 8 at step 152.
-[15:44:15] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 22 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 27 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 22 completed by AGV 10 at step 160.
-[15:44:15] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 12 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 27 completed by AGV 0 at step 165.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 12 completed by AGV 5 at step 169.
-[15:44:15] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 47 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 48 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:15] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 47 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 48 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 44 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 46 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 47 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 48 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 41 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 28 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 36 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 26 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:16] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:17] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:18] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:19] [OrderManager] Order 10 timeout, returned to unprocessed queue.
-[15:44:19] [OrderManager] Order 33 timeout, returned to unprocessed queue.
-[15:44:19] [OrderManager] Order 10 timeout, returned to unprocessed queue.
+[14:25:55] [OrderManager] Step 0: Accepted 50 new orders. Total orders: 50
+[14:25:56] [OrderManager] Order 39 completed by AGV 0 at step 20.
+[14:25:56] [OrderManager] Order 6 completed by AGV 7 at step 22.
+[14:25:56] [OrderManager] Order 22 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 2 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 8 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 16 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 28 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 33 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 32 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 10 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 37 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 41 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 42 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 49 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 44 timeout, returned to unprocessed queue.
+[14:25:56] [OrderManager] Order 22 completed by AGV 1 at step 31.
+[14:25:57] [OrderManager] Order 35 completed by AGV 0 at step 42.
+[14:25:57] [OrderManager] Order 8 completed by AGV 3 at step 52.
+[14:25:57] [OrderManager] Order 2 completed by AGV 2 at step 55.
+[14:25:58] [OrderManager] Order 32 timeout, returned to unprocessed queue.
+[14:25:58] [OrderManager] Order 28 completed by AGV 5 at step 72.
+[14:25:58] [OrderManager] Order 37 timeout, returned to unprocessed queue.
+[14:25:59] [OrderManager] Order 16 timeout, returned to unprocessed queue.
