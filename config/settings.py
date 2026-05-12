@@ -1,8 +1,13 @@
 # 导入工具：数据类、类型注解、JSON、枚举
 from dataclasses import dataclass
 from typing import Optional
+from pathlib import Path
 import json
 from enum import Enum
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DHC_MODEL = PROJECT_ROOT / "algorithm" / "server3" / "27500.pth"
+DEFAULT_MAP_FILE = PROJECT_ROOT / "config" / "maps" / "map_25_20_het.json"
 
 # ========================= 枚举定义：只能选固定值 =========================
 # 枚举 = 给选项起名字，防止写错字符串
@@ -35,15 +40,15 @@ class SimConfig:
     scheduler_type: SchedulerType = SchedulerType.TA
     # 调度算法：当前用 TA 算法
 
-    planner_type: PlannerType = PlannerType.DHC
+    planner_type: PlannerType = PlannerType.CBS_FW
     # 路径规划：当前用 A*
     # 可切换：ASTAR / CBS_FW / DHC
 
     force_replan_every_step: bool = False
-    # 是否每一步都强制重新规划路径
+    # 是否每一步都强制重新规划路径S
     # 开启 = 更灵活，但计算量大
 
-    dhc_model_path: str = '.\\algorithm\\server\\20000.pth'
+    dhc_model_path: str = str(DEFAULT_DHC_MODEL)
     # DHC 深度学习模型路径
 
     # ==================== 订单参数 ====================
@@ -63,7 +68,7 @@ class SimConfig:
     # 订单随机种子：固定值 = 每次生成一样的订单
 
     # ==================== 地图与仿真步数 ====================
-    map_file: str = "config/maps/map_25_20_het.json"
+    map_file: str = str(DEFAULT_MAP_FILE)
     # 地图文件路径
 
     max_steps: int = 1000
@@ -95,9 +100,10 @@ class FaultConfig:
     """AGV 故障配置：是否坏车、坏车概率、维修时间"""
 
     enable_faults: bool = False
+
     # 是否开启故障：当前关闭（调试更稳定）
 
-    fault_prob: float = 0.01
+    fault_prob: float = 0.1
     # 每步 AGV 故障概率：1%
 
     mean_repair_time: int = 40
@@ -106,7 +112,7 @@ class FaultConfig:
     allow_multiple_faults: bool = False
     # 是否允许多台 AGV 同时故障
 
-    fault_seed: Optional[int] = 42
+    fault_seed: Optional[int] =42
     # 故障随机种子
 
 # ========================= 各种订单模式的详细配置 =========================

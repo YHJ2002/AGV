@@ -1,7 +1,7 @@
 import itertools
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Optional, Tuple, Set
 from core.gridmap import GridMap
 from core.order import Order
 from core.ordermanager import OrderManager
@@ -12,7 +12,6 @@ from core.fault_manager import FaultManager
 from scheduler.base_scheduler import BaseScheduler
 from scipy.optimize import linear_sum_assignment
 from utils.base_utils import orders_to_tasks
-import random
 
 
 class TAScheduler(BaseScheduler):
@@ -31,65 +30,88 @@ class TAScheduler(BaseScheduler):
         """计算两个网格坐标之间的曼哈顿距离。"""
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
+    def _select_best_box_for_group(
+        self,
+        agv_pos: Tuple[int, int],
+        order_group: List[Order],
+    ) -> Tuple[int, Optional[int]]:
+        """
+        为某组同 goods_id 的订单选择一个最合适的箱子。
+
+        这里显式枚举所有候选箱子，选总代价最小的那个。
+        这样“匈牙利分配用的代价”和“真正执行时的任务路径”就一致了，
+        不会再被两次随机选箱子的噪声带偏。
+        """
+        if not order_group:
+            return float("inf"), None
+
+        first_order = order_group[0]
+        box_ids = self.map.get_boxes_by_goods(first_order.goods_id)
+        if not box_ids:
+            return float("inf"), None
+
+        best_cost = float("inf")
+        best_box_id: Optional[int] = None
+
+        for box_id in sorted(box_ids):
+            box_pos = self.map.get_box_position(box_id)
+
+            total_cost = self.compute_manhattan_distance(agv_pos, box_pos)
+
+            receiver_pos = self.map.get_receiver_position(first_order.receiver_id)
+            total_cost += self.compute_manhattan_distance(box_pos, receiver_pos)
+            prev_receiver_pos = receiver_pos
+
+            for order in order_group[1:]:
+                next_receiver_pos = self.map.get_receiver_position(order.receiver_id)
+                total_cost += self.compute_manhattan_distance(prev_receiver_pos, next_receiver_pos)
+                prev_receiver_pos = next_receiver_pos
+
+            total_cost += self.compute_manhattan_distance(prev_receiver_pos, box_pos)
+
+            if total_cost < best_cost or (total_cost == best_cost and (best_box_id is None or box_id < best_box_id)):
+                best_cost = total_cost
+                best_box_id = box_id
+
+        return best_cost, best_box_id
+
     def compute_task_cost(self, agv_pos: Tuple[int, int], order_group: List[Order]) -> int:
         """
         计算一个 AGV 执行一组连续订单的总代价。
         路径逻辑：
         AGV当前位置 -> 货箱 -> 第一个收货点 -> 后续收货点 ... -> 返回货箱
         """
-        # 如果订单组为空，则返回无穷大，表示不可分配
-        if not order_group:
-            return float('inf')
+        cost, _ = self._select_best_box_for_group(agv_pos, order_group)
+        return cost
 
-        # 取订单组中的第一个订单，依据 goods_id 找到可用货箱
-        first_order = order_group[0]
-        box_ids = self.map.get_boxes_by_goods(first_order.goods_id)
-
-        # 随机选择一个存放该货物的箱子
-        selected_box_id = random.choice(box_ids)
-        box_pos = self.map.get_box_position(selected_box_id)
-
-        # AGV 从当前位置移动到货箱的代价
-        total_cost = self.compute_manhattan_distance(agv_pos, box_pos)
-
-        # 再从货箱移动到第一个订单对应收货点的代价
-        receiver_pos = self.map.get_receiver_position(first_order.receiver_id)
-        total_cost += self.compute_manhattan_distance(box_pos, receiver_pos)
-
-        # 记录上一个收货点位置，便于计算后续订单间的移动代价
-        prev_receiver_pos = receiver_pos
-
-        # 遍历后续订单，累计收货点之间的移动成本
-        for order in order_group[1:]:
-            next_receiver_pos = self.map.get_receiver_position(order.receiver_id)
-            total_cost += self.compute_manhattan_distance(prev_receiver_pos, next_receiver_pos)
-            prev_receiver_pos = next_receiver_pos
-
-        # 所有配送完成后，返回货箱位置的代价
-        total_cost += self.compute_manhattan_distance(prev_receiver_pos, box_pos)
-
-        return total_cost
-
-    def build_cost_matrix(self, idle_agv_ids: List[int], grouped_orders: List[List['Order']]) -> List[List[int]]:
+    def build_cost_matrix(
+        self,
+        idle_agv_ids: List[int],
+        grouped_orders: List[List['Order']]
+    ) -> Tuple[List[List[int]], List[List[Optional[int]]]]:
         """
         构建代价矩阵：
         cost_matrix[agv_idx][order_group_idx] 表示某个 AGV 执行某组订单的总代价。
         """
         cost_matrix = []
+        box_choice_matrix: List[List[Optional[int]]] = []
 
         # 遍历所有空闲 AGV
         for agv_id in idle_agv_ids:
             agv_pos = self.agv_manager.get_grid_position(agv_id)
             agv_costs = []
+            agv_boxes: List[Optional[int]] = []
 
             # 计算该 AGV 对每个订单组的执行成本
             for order_group in grouped_orders:
-                cost = self.compute_task_cost(agv_pos, order_group)
+                cost, box_id = self._select_best_box_for_group(agv_pos, order_group)
                 agv_costs.append(cost)
+                agv_boxes.append(box_id)
 
             cost_matrix.append(agv_costs)
+            box_choice_matrix.append(agv_boxes)
 
-        return cost_matrix
+        return cost_matrix, box_choice_matrix
 
     def task_assignment(self, cost_matrix: List[List[int]]) -> Dict[int, int]:
         """
@@ -200,7 +222,7 @@ class TAScheduler(BaseScheduler):
             grouped_orders = list(goods_to_orders.values())
 
             # 构建 AGV 与订单组之间的代价矩阵
-            cost_matrix = self.build_cost_matrix(agv_ids, grouped_orders)
+            cost_matrix, box_choice_matrix = self.build_cost_matrix(agv_ids, grouped_orders)
 
             # 求解最优分配
             assignment = self.task_assignment(cost_matrix)
@@ -213,15 +235,18 @@ class TAScheduler(BaseScheduler):
 
             # 为每台 AGV 生成具体任务
             for agv_id, orders in agv_to_orders.items():
+                agv_idx = agv_ids.index(agv_id)
+                task_idx = assignment[agv_idx]
+                selected_box_id = box_choice_matrix[agv_idx][task_idx]
+                if selected_box_id is None:
+                    raise ValueError(f"No available box found for goods_id={orders[0].goods_id}")
+
                 # 深拷贝，避免直接修改原始订单对象
                 copied_orders = deepcopy(orders)
 
-                # 为每个订单随机指定一个可用货箱
+                # 估价阶段和真正执行阶段使用同一个箱子，减少分配噪声。
                 for order in copied_orders:
-                    box_ids = self.map.get_boxes_by_goods(order.goods_id)
-                    if not box_ids:
-                        raise ValueError(f"No available box found for goods_id={order.goods_id}")
-                    order.box_id = random.choice(box_ids)
+                    order.box_id = selected_box_id
 
                 # 将订单列表转换成 AGV 可执行的任务序列
                 agv_task_map[agv_id] = orders_to_tasks(copied_orders, self.map)

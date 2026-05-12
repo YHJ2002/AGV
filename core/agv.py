@@ -28,6 +28,7 @@ class StepInfo(Enum):
     STAY_OFF_GOAL = auto()   # 非目标位置静止
     STAY_ON_GOAL = auto()    # 目标位置静止
     FINISH = auto()          # 任务节点完成
+    ORDER_COMPLETE = auto()  # 真正完成一张订单
     TURNING = auto()         # 转向中
     OTHER = auto()           # 其他状态
 
@@ -109,16 +110,16 @@ class AGV:
             if self.task_queue and self.grid_pos == self.task_queue[0][0]:
                 task_pos, action, extra = self.task_queue.popleft()
                 self.last_completed_task_pos = task_pos
-                self._execute_action(action, extra)  # 执行取货/放货/交接动作
+                order_completed = self._execute_action(action, extra)  # 执行取货/放货/交接动作
                 replan_required = True  # 任务完成，需要重规划下一任务路径
-                step_info = StepInfo.FINISH
+                step_info = StepInfo.ORDER_COMPLETE if order_completed else StepInfo.FINISH
         # 无路径队列但有任务：直接执行当前任务
         elif not self.action_queue and self.task_queue and self.grid_pos == self.task_queue[0][0]:
             task_pos, action, extra = self.task_queue.popleft()
             self.last_completed_task_pos = task_pos
-            self._execute_action(action, extra)
+            order_completed = self._execute_action(action, extra)
             replan_required = True
-            step_info = StepInfo.FINISH
+            step_info = StepInfo.ORDER_COMPLETE if order_completed else StepInfo.FINISH
         # 无路径队列且非休息状态：需要重规划
         if not self.action_queue and not self.is_resting:
             replan_required = True
@@ -199,15 +200,16 @@ class AGV:
             if success:
                 self.carried_box_id = None
 
-    def _handover_box(self, order_id: Optional[int]):
+    def _handover_box(self, order_id: Optional[int]) -> bool:
         """交接动作：向订单管理器上报订单完成"""
         if self.carried_box_id is None or order_id is None:
-            return
+            return False
         # 调用订单管理器接口，完成订单闭环
-        self.order_manager.complete_order(
+        completed = self.order_manager.complete_order(
             order_id=order_id, agv_id=self.id, box_id=self.carried_box_id, agv_pos=self.grid_pos
         )
         self.carried_box_id = None  # 交接后清空携带记录
+        return completed
 
     def assign_task(self, task_positions: List[Tuple[Tuple[int, int], AGVAction, Optional[int]]]):
         """分配任务：更新任务队列，取消休息状态"""
@@ -226,14 +228,17 @@ class AGV:
         """获取下一移动栅格：无路径则返回当前位置"""
         return self.action_queue[0] if self.action_queue else self.grid_pos
 
-    def _execute_action(self, action: AGVAction, extra: Optional[int]):
+    def _execute_action(self, action: AGVAction, extra: Optional[int]) -> bool:
         """动作执行分发：根据动作类型调用对应私有方法"""
         if action == AGVAction.PICK:
             self._pick_box()
+            return False
         elif action == AGVAction.PLACE:
             self._place_box()
+            return False
         elif action == AGVAction.HANDOVER:
-            self._handover_box(extra)
+            return self._handover_box(extra)
+        return False
 
     def reset(self):
         """重置AGV到初始状态（用于仿真重启）"""

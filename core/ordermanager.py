@@ -37,6 +37,9 @@ class OrderManager:
         # 已完成订单
         self.finished_orders: Dict[int, Order] = {}
 
+        # 本步超时回退的订单事件，供训练环境按 AGV 做惩罚归因。
+        self.last_timeout_events: List[Tuple[int, int]] = []
+
         # 下一个订单编号
         self.next_order_id = 0
 
@@ -133,6 +136,7 @@ class OrderManager:
 
         # 记录订单开始处理的仿真步
         order.start_processing_step = clock.now()
+        order.assigned_agv_id = agv_id
 
         # 加入处理中订单字典
         self.processing_orders[order_id] = order
@@ -173,6 +177,7 @@ class OrderManager:
         # 校验是否真的完成了订单
         if order.goods_id in goods_list and agv_pos == receiver_pos:
             order.finished_step = clock.now()
+            order.assigned_agv_id = agv_id
 
             # 从原状态移除，加入已完成订单
             self.finished_orders[order_id] = order_source.pop(order_id)
@@ -214,6 +219,7 @@ class OrderManager:
         则将其退回未处理队列重新等待分配。
         """
         timeout_orders = []
+        self.last_timeout_events = []
         current_step = clock.now()
 
         for order_id, order in self.processing_orders.items():
@@ -226,12 +232,21 @@ class OrderManager:
         # 将超时订单退回未处理队列
         for order_id in timeout_orders:
             order = self.processing_orders.pop(order_id)
+            if order.assigned_agv_id is not None:
+                self.last_timeout_events.append((order_id, order.assigned_agv_id))
             order.start_processing_step = None
+            order.assigned_agv_id = None
             self.unprocessed_orders[order_id] = order
 
             global_logger.add_runtime_log(
                 f"[OrderManager] Order {order_id} timeout, returned to unprocessed queue."
             )
+
+    def consume_timeout_events(self) -> List[Tuple[int, int]]:
+        """Return and clear timeout events collected in the last step."""
+        events = list(self.last_timeout_events)
+        self.last_timeout_events = []
+        return events
 
     def reset_order(self):
         """
@@ -247,5 +262,6 @@ class OrderManager:
         self.finished_orders.clear()
         self.next_order_id = 0
         self.strategy = self._create_strategy()
+        self.last_timeout_events = []
 
         global_logger.add_runtime_log("[OrderManager] Orders have been reset.")

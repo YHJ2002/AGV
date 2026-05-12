@@ -94,7 +94,35 @@ def run_single_episode(seed: int) -> Dict:
     ):
         simulator.step()      # 执行一轮仿真步进（订单更新、调度、规划、移动等）
         fault_manager.step()  # 执行一轮故障注入/恢复逻辑
+    while (
+        not ordermanager.is_all_orders_completed()
+        and clock.now() < SimConfig.max_steps
+    ):
+        simulator.step()
+        fault_manager.step()
 
+    print("\n==== DEBUG ORDER STATUS ====")
+    print("clock:", clock.now())
+    print("finished:", ordermanager.is_all_orders_completed())
+    print("unprocessed:", list(ordermanager.unprocessed_orders.keys()))
+    print("processing:", list(ordermanager.processing_orders.keys()))
+    print("finished_orders:", list(ordermanager.finished_orders.keys()))
+
+    print("\n==== DEBUG AGV STATUS ====")
+    for agv_id, agv in agv_manager._agvs.items():
+        if len(agv.task_queue) > 0 or len(agv.action_queue) > 0:
+            print(
+                "AGV", agv_id,
+                "pos=", agv.grid_pos,
+                "task_queue=", list(agv.task_queue),
+                "action_queue_len=", len(agv.action_queue),
+                "carried_box_id=", agv.carried_box_id,
+                "is_working=", agv.is_working,
+                "rest_target=", agv.rest_target,
+            )
+
+    metrics = global_logger.get_final_metrics(clock.now())    
+        
     # 从日志器中提取最终实验指标
     metrics = global_logger.get_final_metrics(clock.now())
 
@@ -235,7 +263,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--runs", type=int, default=1)     # 实验轮数
     parser.add_argument("--seed", type=int, default=42)      # 初始随机种子
-    parser.add_argument("--out_dir", type=str, default="test/single")  # 输出目录
+    parser.add_argument("--out_dir", type=str, default="test/single5")  # 输出目录
     args = parser.parse_args()
 
     # 若输出目录不存在则自动创建

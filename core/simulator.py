@@ -10,11 +10,17 @@ from planner.base_planner import BasePlanner
 from utils.simulation_clock import clock
 from utils.logger import global_logger
 
+
 class Simulator:
-    def __init__(self, map_inst: GridMap,
-                 agv_manager: AGVManager, order_manager: OrderManager, env: Env,
-                 scheduler: BaseScheduler, planner: BasePlanner):
-        # 保存地图、AGV管理器、订单管理器、环境、调度器和路径规划器
+    def __init__(
+        self,
+        map_inst: GridMap,
+        agv_manager: AGVManager,
+        order_manager: OrderManager,
+        env: Env,
+        scheduler: BaseScheduler,
+        planner: BasePlanner,
+    ):
         self.map = map_inst
         self.agv_manager = agv_manager
         self.order_manager = order_manager
@@ -53,7 +59,6 @@ class Simulator:
         # 获取需要去休息区的AGV
         agvs_needing_rest = self.agv_manager.get_need_rest_agv_ids()
         if agvs_needing_rest:
-            # 为这些AGV分配等待区/休息区
             rest_assignments = self.scheduler.assign_rest_areas(agvs_needing_rest)
             self.agv_manager.assign_rest_zones(rest_assignments)
 
@@ -78,5 +83,5 @@ class Simulator:
             print("All orders have been completed.")
 
     def order_all_finished(self) -> bool:
-        """检查订单是否全部完成（当前仍是占位实现）"""
-        return False  # TODO: 后续应接入 OrderManager 的真实完成状态判断
+        """检查订单是否全部完成"""
+        return self.order_manager.is_all_orders_completed()

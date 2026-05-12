@@ -1,0 +1,3 @@
+﻿Scenario,Tasks Completed,Task Success Rate,Throughput,Avg Task Time,Total AGV Collisions
+Normal A*,1.0,1.0,1.0,1.0,1.0
+Fault A*,0.0,0.0,0.0,0.0,0.0

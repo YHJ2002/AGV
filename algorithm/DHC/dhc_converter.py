@@ -35,7 +35,7 @@ class DHCCompatibleConverter:
         # 外部环境一般使用 (x, y)，这里统一转成 DHC 的 (row, col)。
         agv_positions = {agv_id: (y, x) for agv_id, (x, y) in agv_positions_xy.items()}
         height, width = static_grid.shape
-        active_ids = list(targets.keys())
+        active_ids = sorted(targets.keys())
 
         # 当前没有需要重规划的 AGV 时，返回空观测。
         if not active_ids:

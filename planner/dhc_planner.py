@@ -15,6 +15,12 @@ from planner.base_planner import BasePlanner
 
 
 class DHCPlanner(BasePlanner):
+    @staticmethod
+    def _infer_arch_from_state_dict(state_dict: Dict[str, torch.Tensor]) -> Tuple[int, int]:
+        cnn_channel = state_dict["obs_encoder.0.weight"].shape[0]
+        hidden_dim = state_dict["state.weight"].shape[1]
+        return cnn_channel, hidden_dim
+
     def __init__(
         self,
         env: Env,
@@ -36,17 +42,21 @@ class DHCPlanner(BasePlanner):
             agvmanager=self.env.agv_manager,
         )
 
-        self.model = Network().to(self.device)
-        self.model.eval()
-
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"DHC model not found: {model_path}")
 
         state_dict = torch.load(model_path, map_location=device)
+        cnn_channel, hidden_dim = self._infer_arch_from_state_dict(state_dict)
+
+        self.model = Network(cnn_channel=cnn_channel, hidden_dim=hidden_dim).to(self.device)
+        self.model.eval()
         self.model.load_state_dict(state_dict)
         self.model.reset()
 
-        print(f"[DHCPlanner] Loaded weights: {model_path}")
+        print(
+            f"[DHCPlanner] Loaded weights: {model_path} "
+            f"(cnn_channel={cnn_channel}, hidden_dim={hidden_dim})"
+        )
 
     def plan(
         self,
@@ -69,12 +79,12 @@ class DHCPlanner(BasePlanner):
             actions, _, _, _ = self.model.step(obs_tensor, pos_tensor)
 
         paths: Dict[int, List[Tuple[int, int]]] = {}
-        active_ids = list(targets.keys())
+        active_ids = sorted(targets.keys())
 
         # DHC predicts a single next action, so only emit one next cell here.
-        for idx, agv_id in enumerate(active_ids):
+        for agv_id in active_ids:
             start_x, start_y = targets[agv_id][0]
-            dx, dy = ACTION_DELTA[actions[idx]]
+            dx, dy = ACTION_DELTA[actions[agv_id]]
             paths[agv_id] = [(start_x + dx, start_y + dy)]
 
         return paths

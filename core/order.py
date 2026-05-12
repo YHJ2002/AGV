@@ -30,3 +30,6 @@ class Order:
 
     # 订单完成时的仿真步数
     finished_step: Optional[int] = None
+
+    # 当前负责该订单的 AGV，用于训练期把超时惩罚归因到对应车辆。
+    assigned_agv_id: Optional[int] = None

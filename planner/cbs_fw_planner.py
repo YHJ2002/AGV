@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 import heapq
 from collections import defaultdict
 from planner.base_planner import BasePlanner
@@ -27,6 +27,7 @@ class FixedWindowCBSPlanner(BasePlanner):
 
         # 固定窗口大小，只在有限时间窗口内做 CBS 规划
         self.window_size = 10
+        self.max_cbs_nodes = MAX_CBS_NODES
 
     def plan(
         self,
@@ -104,12 +105,13 @@ class FixedWindowCBSPlanner(BasePlanner):
                 if self._is_vertex_free(agv_id, start, 1, root['constraints']):
                     path = [start, start]
 
-            root['paths'][agv_id] = path
-            root['cost'] += len(path) - 1
+            normalized_path = self._normalize_path(path, start)
+            root['paths'][agv_id] = normalized_path
+            root['cost'] += self._path_cost(normalized_path)
 
         # 固定 AGV 只保留窗口内路径
         for agv_id, path in fixed_agents.items():
-            root['paths'][agv_id] = path[: self.window_size + 1]
+            root['paths'][agv_id] = self._normalize_path(path)
 
         # CBS 开放列表：按总代价排序
         open_list = []
@@ -122,7 +124,7 @@ class FixedWindowCBSPlanner(BasePlanner):
             expanded_nodes += 1
 
             # 超过节点上限则停止 CBS 搜索
-            if expanded_nodes >= MAX_CBS_NODES:
+            if expanded_nodes >= self.max_cbs_nodes:
                 break
 
             cost, _, node = heapq.heappop(open_list)
@@ -168,31 +170,16 @@ class FixedWindowCBSPlanner(BasePlanner):
                     if self._is_vertex_free(agent, start, 1, child['constraints']):
                         new_path = [start, start]
 
-                child['paths'][agent] = new_path
+                child['paths'][agent] = self._normalize_path(new_path, start)
 
                 # 更新总代价
-                child['cost'] = sum(len(p) - 1 for p in child['paths'].values() if p)
+                child['cost'] = sum(self._path_cost(p) for p in child['paths'].values() if p)
 
                 heapq.heappush(open_list, (child['cost'], node_id, child))
                 node_id += 1
 
-        # 若 CBS 失败，则退化为逐车独立 A* 结果
-        fallback = {}
-        for agv_id, (start, goal) in targets.items():
-            path = self._a_star_with_constraints(
-                agv_id, start, goal, carrying_status[agv_id], [], goal
-            )
-
-            if path is None:
-                path = [start]
-
-            if len(path) == 1 and start == goal:
-                if self._is_vertex_free(agv_id, start, 1, []):
-                    path = [start, start]
-
-            fallback[agv_id] = path
-
-        return fallback
+        # 若 CBS 失败，则退化为带预留约束的顺序规划，而不是完全独立规划。
+        return self._prioritized_fallback(targets, carrying_status, fixed_agents)
 
     def _a_star_with_constraints(
         self,
@@ -284,6 +271,126 @@ class FixedWindowCBSPlanner(BasePlanner):
     def _h(self, a, b):
         """曼哈顿距离启发函数"""
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def _normalize_path(
+        self,
+        path: List[Tuple[int, int]],
+        fallback_pos: Optional[Tuple[int, int]] = None,
+    ) -> List[Tuple[int, int]]:
+        """
+        将路径裁剪/填充到固定窗口长度。
+        这样已经到达终点或路径较短的 AGV 不会在冲突检测里“消失”。
+        """
+        horizon = self.window_size + 1
+
+        if not path:
+            if fallback_pos is None:
+                return []
+            return [fallback_pos] * horizon
+
+        normalized = list(path[:horizon])
+        if len(normalized) < horizon:
+            normalized.extend([normalized[-1]] * (horizon - len(normalized)))
+        return normalized
+
+    def _path_cost(self, path: List[Tuple[int, int]]) -> int:
+        """
+        计算真实移动代价，忽略到达终点后的补齐驻留段。
+        """
+        if not path:
+            return 0
+
+        last_move_idx = 0
+        for i in range(1, len(path)):
+            if path[i] != path[i - 1]:
+                last_move_idx = i
+        return last_move_idx
+
+    def _build_reservation_constraints(
+        self,
+        agv_id: int,
+        reserved_paths: Dict[int, List[Tuple[int, int]]],
+    ) -> List[Dict]:
+        """
+        把已固定/已规划的路径转换成当前 AGV 需要遵守的顶点和边约束。
+        """
+        constraints: List[Dict] = []
+
+        for other_id, other_path in reserved_paths.items():
+            if other_id == agv_id:
+                continue
+
+            normalized_path = self._normalize_path(other_path)
+
+            for t, pos in enumerate(normalized_path):
+                for cell in self._occupied_cells(other_id, pos):
+                    constraints.append({"agent": agv_id, "loc": [cell], "time": t})
+
+            for t in range(len(normalized_path) - 1):
+                cur = normalized_path[t]
+                nxt = normalized_path[t + 1]
+                if cur != nxt:
+                    constraints.append({"agent": agv_id, "loc": [nxt, cur], "time": t})
+
+        return constraints
+
+    def _planning_priority(
+        self,
+        agv_id: int,
+        targets: Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]],
+        carrying_status: Dict[int, bool],
+    ) -> Tuple[int, int, int]:
+        """
+        顺序 fallback 的规划优先级：
+        1. 先规划正在载货的 AGV
+        2. 再规划距离目标更近的 AGV，尽量尽快清障
+        3. 最后按 AGV 编号稳定排序
+        """
+        start, goal = targets[agv_id]
+        carrying_rank = 0 if carrying_status[agv_id] else 1
+        distance_rank = self._h(start, goal)
+        return carrying_rank, distance_rank, agv_id
+
+    def _prioritized_fallback(
+        self,
+        targets: Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]],
+        carrying_status: Dict[int, bool],
+        fixed_agents: Dict[int, List[Tuple[int, int]]],
+    ) -> Dict[int, List[Tuple[int, int]]]:
+        """
+        CBS 超限后的保守退化策略：
+        按优先级逐车规划，并把已规划路径作为后续 AGV 的预留约束。
+        这样比完全独立 A* 更不容易出现少数 seed 的极端阻塞。
+        """
+        reserved_paths = {
+            agv_id: self._normalize_path(path)
+            for agv_id, path in fixed_agents.items()
+        }
+        planned_paths = dict(reserved_paths)
+
+        planning_order = sorted(
+            targets.keys(),
+            key=lambda agv_id: self._planning_priority(agv_id, targets, carrying_status),
+        )
+
+        for agv_id in planning_order:
+            start, goal = targets[agv_id]
+            constraints = self._build_reservation_constraints(agv_id, planned_paths)
+
+            path = self._a_star_with_constraints(
+                agv_id, start, goal, carrying_status[agv_id], constraints, goal
+            )
+
+            if path is None:
+                path = [start]
+
+            if len(path) == 1 and start == goal:
+                if self._is_vertex_free(agv_id, start, 1, constraints):
+                    path = [start, start]
+
+            planned_paths[agv_id] = self._normalize_path(path, start)
+
+        return planned_paths
 
     def _reconstruct_path(self, state, parents):
         """根据 parent 指针回溯重建路径"""

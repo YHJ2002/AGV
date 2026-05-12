@@ -6,6 +6,9 @@ __pycache__/
 .vscode/
 algorithm/DHC/models/
 algorithm/server/
+algorithm/server2/
+algorithm/server3/
+algorithm/server4/
 logs/.venv/
 venv/
 .venv/
