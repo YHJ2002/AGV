@@ -3,6 +3,8 @@ from core.gridmap import GridMap
 from core.agvmanager import AGVManager
 from core.agv import StepInfo
 from core.ordermanager import OrderManager
+from utils.logger import global_logger
+from utils.simulation_clock import clock
 
 # 浮点数比较误差，用于判断AGV是否正好位于网格中心
 epsilon = 1e-4
@@ -151,10 +153,11 @@ class Env:
                 occ = self._get_next_occupied_positions(agv_id, cur, tgt)
 
                 # 是否与其他AGV发生顶点冲突
-                has_vertex_conflict = any(
-                    (cell in cur_vertex_dict and len(cur_vertex_dict[cell] - {agv_id}) > 0)
-                    for cell in occ
-                )
+                conflicting_cells = [
+                    cell for cell in occ
+                    if cell in cur_vertex_dict and len(cur_vertex_dict[cell] - {agv_id}) > 0
+                ]
+                has_vertex_conflict = bool(conflicting_cells)
                 # 是否发生边冲突（交换位置）
                 has_edge_conflict = (tgt, cur) in edge_conflict_set
 
@@ -174,6 +177,21 @@ class Env:
                     # 否则该AGV保持原地
                     final_next_pos[agv_id] = cur
                     edge_conflict_set.add((cur, cur))
+                    for cell in conflicting_cells:
+                        other_agvs = sorted(cur_vertex_dict.get(cell, set()) - {agv_id})
+                        global_logger.record_conflict_event(
+                            step=clock.now(),
+                            cell=cell,
+                            agv_ids=[agv_id, *other_agvs],
+                            kind="vertex",
+                        )
+                    if has_edge_conflict:
+                        global_logger.record_conflict_event(
+                            step=clock.now(),
+                            cell=tgt,
+                            agv_ids=[agv_id],
+                            kind="edge",
+                        )
 
             # 如果这一轮没有变化，说明冲突消解结果稳定，结束迭代
             if not changed:

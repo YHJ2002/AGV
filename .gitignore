@@ -1,16 +1,45 @@
-# 忽略所有 .pyc 文件
-*.pyc
-
-# （可选）忽略 Python 缓存目录
+# Python cache
 __pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / editor
 .vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime logs and generated path exports
+logs/
+*.log
+*.html
+*.json
+*.png
+
+# Local experiment outputs
+batch_results1/
+batch_results2/
+figures/
+
+# Temporary verification outputs
+test/tmp_verify/
+test/tmp_verify_routes/
+
+# Generated test/experiment result files
+test/**/*.csv
+test/**/*.html
+test/**/*.json
+test/**/*.png
+
+# Local model checkpoints / large training artifacts
 algorithm/DHC/models/
 algorithm/server/
 algorithm/server2/
 algorithm/server3/
 algorithm/server4/
-logs/.venv/
-venv/
-.venv/
-__pycache__/
-*.pyc

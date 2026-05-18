@@ -5,6 +5,7 @@ from core.gridmap import GridMap  # 栅格地图实例，提供空间环境与�
 from core.ordermanager import OrderManager  # 订单管理器，处理订单生命周期
 from config.settings import SimConfig  # 全局仿真配置（AGV速度、转向时间等）
 import json
+from utils.logger import global_logger
 
 epsilon = 1e-4  # 浮点数精度阈值，用于位置对齐判断
 
@@ -191,6 +192,7 @@ class AGV:
             raise ValueError(f"AGV {self.id} 尺寸不匹配货物 {box_id}（AGV={self.size}, 货物={box_size}）")
         if box_id is not None:
             self.carried_box_id = int(box_id)  # 记录携带货物ID
+            global_logger.record_pick_position(self.id, self.grid_pos)
 
     def _place_box(self):
         """放货动作：将携带货物放置到当前栅格"""
@@ -208,7 +210,6 @@ class AGV:
         completed = self.order_manager.complete_order(
             order_id=order_id, agv_id=self.id, box_id=self.carried_box_id, agv_pos=self.grid_pos
         )
-        self.carried_box_id = None  # 交接后清空携带记录
         return completed
 
     def assign_task(self, task_positions: List[Tuple[Tuple[int, int], AGVAction, Optional[int]]]):

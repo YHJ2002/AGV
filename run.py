@@ -22,7 +22,7 @@ from utils.logger import global_logger
 from utils.simulation_clock import clock
 
 STATE = {
-    "paused": True,
+    "paused": False,
     "step_trigger": False,
 }
 RUNNING = True
@@ -120,6 +120,8 @@ async def simulator_loop(websocket, message_queue):
     scheduler = build_scheduler(env, agv_manager, ordermanager, grid_map, fault_manager)
     planner = build_planner(env, agv_manager, ordermanager, grid_map, fault_manager)
     simulator = Simulator(grid_map, agv_manager, ordermanager, env, scheduler, planner)
+    global_logger.record_agv_positions(clock.now(), agv_manager)
+    paths_exported_for_cycle = False
 
     await send_init_payload(
         websocket,
@@ -133,10 +135,13 @@ async def simulator_loop(websocket, message_queue):
         if NEED_RESET:
             print("Resetting simulation...")
 
-            STATE["paused"] = True
+            STATE["paused"] = False
             STATE["step_trigger"] = False
 
             await websocket.send(json.dumps({"type": "reset"}))
+            if not paths_exported_for_cycle:
+                global_logger.export_agv_paths(grid_map.width, grid_map.height)
+                paths_exported_for_cycle = True
 
             clock.reset()
             global_logger.reset()
@@ -150,6 +155,7 @@ async def simulator_loop(websocket, message_queue):
             scheduler = build_scheduler(env, agv_manager, ordermanager, grid_map, fault_manager)
             planner = build_planner(env, agv_manager, ordermanager, grid_map, fault_manager)
             simulator = Simulator(grid_map, agv_manager, ordermanager, env, scheduler, planner)
+            global_logger.record_agv_positions(clock.now(), agv_manager)
 
             while not message_queue.empty():
                 _ = await message_queue.get()
@@ -163,6 +169,7 @@ async def simulator_loop(websocket, message_queue):
             )
 
             NEED_RESET = False
+            paths_exported_for_cycle = False
             print("Reset complete.")
             continue
 
@@ -192,14 +199,24 @@ async def simulator_loop(websocket, message_queue):
             await asyncio.sleep(0.1)
 
         if not NEED_RESET:
-            print("All orders completed or max steps reached; waiting for reset or stop.")
+            if not paths_exported_for_cycle:
+                global_logger.export_agv_paths(grid_map.width, grid_map.height)
+                paths_exported_for_cycle = True
+            print("All orders completed or max steps reached; stopping automatically.")
             global_logger.add_runtime_log(global_logger.get_final_metrics(clock.now()))
             print(global_logger.get_final_metrics(clock.now()))
-
-        while RUNNING and not NEED_RESET:
-            await asyncio.sleep(0.1)
+            STATE["paused"] = True
+            RUNNING = False
+            await websocket.send(json.dumps({
+                "type": "simulation_complete",
+                "message": "Simulation complete. AGV path files exported to logs/."
+            }))
+            await websocket.close()
+            break
 
     print("Simulation loop ended.")
+    if not paths_exported_for_cycle:
+        global_logger.export_agv_paths(grid_map.width, grid_map.height)
 
 
 async def ws_handler(websocket):
