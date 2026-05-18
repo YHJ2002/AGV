@@ -7,30 +7,87 @@ import webbrowser
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 
-from config.settings import SimConfig
+import websockets
+
+from config.settings import OrderMode, PlannerType, SchedulerType, SimConfig
 from core.agvmanager import AGVManager
+from core.data_generator import generate_send_data
+from core.env import Env
+from core.fault_manager import FaultManager
 from core.gridmap import GridMap
 from core.ordermanager import OrderManager
-from core.env import Env
 from core.simulator import Simulator
-from core.data_generator import generate_send_data
-from core.fault_manager import FaultManager
+from utils.algorithm_factory import build_planner, build_scheduler
 from utils.logger import global_logger
-import websockets
 from utils.simulation_clock import clock
-from utils.algorithm_factory import build_scheduler, build_planner
 
-# 全局运行状态
 STATE = {
-    "paused": True,        # 是否暂停
-    "step_trigger": False  # 是否触发单步执行
+    "paused": True,
+    "step_trigger": False,
 }
 RUNNING = True
 NEED_RESET = False
 
 
+def serialize_algorithm_config():
+    return {
+        "scheduler": SimConfig.scheduler_type.value,
+        "planner": SimConfig.planner_type.value,
+        "order_mode": SimConfig.order_mode.value,
+    }
+
+
+def build_algorithm_config_message(status, message, applies_on_reset=True):
+    return {
+        "type": "algorithm_config",
+        "status": status,
+        "message": message,
+        "applies_on_reset": applies_on_reset,
+        **serialize_algorithm_config(),
+    }
+
+
+def apply_algorithm_config(msg):
+    scheduler_value = msg.get("scheduler")
+    planner_value = msg.get("planner")
+    order_mode_value = msg.get("order_mode")
+
+    missing_fields = [
+        key for key, value in (
+            ("scheduler", scheduler_value),
+            ("planner", planner_value),
+            ("order_mode", order_mode_value),
+        ) if value is None
+    ]
+    if missing_fields:
+        return False, build_algorithm_config_message(
+            "error",
+            f"Missing fields: {', '.join(missing_fields)}",
+        )
+
+    try:
+        SimConfig.scheduler_type = SchedulerType(scheduler_value)
+        SimConfig.planner_type = PlannerType(planner_value)
+        SimConfig.order_mode = OrderMode(order_mode_value)
+    except ValueError as exc:
+        return False, build_algorithm_config_message("error", str(exc))
+
+    global_logger.add_runtime_log(
+        "[Config] Updated algorithms: "
+        f"scheduler={SimConfig.scheduler_type.value}, "
+        f"planner={SimConfig.planner_type.value}, "
+        f"order_mode={SimConfig.order_mode.value}. "
+        "Reset to apply."
+    )
+
+    return True, build_algorithm_config_message(
+        "ok",
+        "Algorithm configuration saved. Reset to apply.",
+    )
+
+
 def start_http_server(port=8000):
-    """启动本地 HTTP 静态服务，避免 file:// 带来的跨域问题。"""
+    """Start a local static HTTP server for the frontend."""
     os.chdir(os.path.abspath("."))
     handler = SimpleHTTPRequestHandler
     with TCPServer(("", port), handler) as httpd:
@@ -38,19 +95,22 @@ def start_http_server(port=8000):
         httpd.serve_forever()
 
 
+async def send_init_payload(websocket, grid_map, agv_manager, ordermanager, message):
+    init_data = generate_send_data(grid_map, agv_manager, ordermanager, data_type="init")
+    init_data["algorithm_config"] = build_algorithm_config_message(
+        "active",
+        message,
+    )
+    await websocket.send(json.dumps(init_data))
+
+
 async def simulator_loop(websocket, message_queue):
-    """
-    仿真主循环：
-    1. 初始化核心对象
-    2. 首次向前端发送 init 数据
-    3. 进入仿真推进 / 重置 / 等待循环
-    """
+    """Run the simulation lifecycle, including resets and step updates."""
     global RUNNING
     global NEED_RESET
 
     print("Simulation begin")
 
-    # -------------------- 1) 核心对象初始化 --------------------
     grid_map = GridMap()
     ordermanager = OrderManager(grid_map)
     agv_manager = AGVManager(grid_map, ordermanager)
@@ -59,98 +119,83 @@ async def simulator_loop(websocket, message_queue):
 
     scheduler = build_scheduler(env, agv_manager, ordermanager, grid_map, fault_manager)
     planner = build_planner(env, agv_manager, ordermanager, grid_map, fault_manager)
-
     simulator = Simulator(grid_map, agv_manager, ordermanager, env, scheduler, planner)
 
-    # 首次发送初始化数据，前端据此创建地图、AGV、货架、接收区等对象
-    init_data = generate_send_data(grid_map, agv_manager, ordermanager, data_type="init")
-    await websocket.send(json.dumps(init_data))
+    await send_init_payload(
+        websocket,
+        grid_map,
+        agv_manager,
+        ordermanager,
+        "Current active algorithms.",
+    )
 
-    # -------------------- 2) 仿真生命周期循环 --------------------
     while RUNNING:
-        # -------------------- reset 热重置 --------------------
         if NEED_RESET:
             print("Resetting simulation...")
 
-            # A. 先暂停，防止重置过程中继续推进
             STATE["paused"] = True
             STATE["step_trigger"] = False
 
-            # B. 先通知前端清空旧场景
-            # 这一条很关键，否则前端如果直接接收新的 init 并追加渲染，
-            # 就会出现“旧 AGV 图像 + 新 AGV 图像同时存在”的问题
             await websocket.send(json.dumps({"type": "reset"}))
 
-            # C. 重置全局时钟和日志
             clock.reset()
             global_logger.reset()
 
-            # D. 重置核心业务对象
-            grid_map.reset_map()         # 重置地图：恢复货箱状态、清空动态占用
-            ordermanager.reset_order()   # 重置订单：清空未处理/处理中/已完成订单
-            agv_manager.reset_agvs()     # 重置 AGV：回到初始位置、清空任务状态
-            fault_manager.reset()        # 重置故障管理状态
-
-            # E. 重置环境
+            grid_map.reset_map()
+            ordermanager.reset_order()
+            agv_manager.reset_agvs()
+            fault_manager.reset()
             env.reset()
 
-            # F. 重新创建调度器和规划器
-            # 避免它们内部仍持有旧状态
             scheduler = build_scheduler(env, agv_manager, ordermanager, grid_map, fault_manager)
             planner = build_planner(env, agv_manager, ordermanager, grid_map, fault_manager)
-
-            # G. 重新创建仿真器，确保引用的是重置后的对象
             simulator = Simulator(grid_map, agv_manager, ordermanager, env, scheduler, planner)
 
-            # H. 清空消息队列，避免 reset 前残留的 fault 命令继续生效
             while not message_queue.empty():
                 _ = await message_queue.get()
 
-            # I. 重新发送 init 数据，让前端用新状态重建场景
-            init_data = generate_send_data(grid_map, agv_manager, ordermanager, data_type="init")
-            await websocket.send(json.dumps(init_data))
+            await send_init_payload(
+                websocket,
+                grid_map,
+                agv_manager,
+                ordermanager,
+                "Algorithms applied after reset.",
+            )
 
             NEED_RESET = False
             print("Reset complete.")
             continue
 
-        # -------------------- 主推进循环 --------------------
         while (
             RUNNING
             and not NEED_RESET
             and not ordermanager.is_all_orders_completed()
             and clock.now() < SimConfig.max_steps
         ):
-            # pause / resume / step 三种控制都在这里生效
             if not STATE["paused"] or STATE["step_trigger"]:
                 simulator.step()
                 STATE["step_trigger"] = False
 
-                # 每步向前端推送 update 数据
                 step_data = generate_send_data(
                     grid_map,
                     agv_manager,
                     ordermanager,
-                    data_type="update"
+                    data_type="update",
                 )
                 await websocket.send(json.dumps(step_data))
 
-            # 处理外部消息（如 damage / repair）
             while not message_queue.empty():
                 msg = await message_queue.get()
                 fault_manager.handle_message(msg)
                 print("Message processed.")
 
-            # 节流，避免事件循环空转
             await asyncio.sleep(0.1)
 
-        # -------------------- 自然结束后的等待态 --------------------
         if not NEED_RESET:
             print("All orders completed or max steps reached; waiting for reset or stop.")
             global_logger.add_runtime_log(global_logger.get_final_metrics(clock.now()))
             print(global_logger.get_final_metrics(clock.now()))
 
-        # 仿真结束后只等待 reset 或 stop
         while RUNNING and not NEED_RESET:
             await asyncio.sleep(0.1)
 
@@ -159,9 +204,8 @@ async def simulator_loop(websocket, message_queue):
 
 async def ws_handler(websocket):
     """
-    WebSocket 消息处理：
-    - pause / resume / step / reset / stop 直接修改全局状态
-    - 其他命令（如 damage / repair）放入消息队列，交给 simulator_loop 处理
+    Handle frontend WebSocket commands.
+    Control commands act immediately; other messages are passed to the sim loop.
     """
     global RUNNING
     global NEED_RESET
@@ -198,18 +242,20 @@ async def ws_handler(websocket):
                     print("Reset command received.")
                     NEED_RESET = True
 
+                elif cmd == "set_algorithms":
+                    _, payload = apply_algorithm_config(msg)
+                    await websocket.send(json.dumps(payload))
+
                 else:
-                    # 其余命令（如 damage / repair）交给仿真循环中的 FaultManager 处理
                     await message_queue.put(msg)
 
-            except Exception as e:
-                print("Invalid message:", message, e)
+            except Exception as exc:
+                print("Invalid message:", message, exc)
 
     except websockets.exceptions.ConnectionClosed:
         print("WebSocket closed.")
 
     finally:
-        # 连接关闭时，确保仿真任务被取消，避免孤儿协程
         if not sim_task.done():
             sim_task.cancel()
             try:
@@ -220,20 +266,16 @@ async def ws_handler(websocket):
 
 
 async def main():
-    """启动可视化系统：HTTP 服务 + WebSocket 服务 + 自动打开浏览器。"""
+    """Start the HTTP server, WebSocket server, and open the frontend."""
     global RUNNING
 
     http_port = 8000
-
-    # HTTP 静态服务放到后台线程中
     threading.Thread(target=start_http_server, args=(http_port,), daemon=True).start()
 
-    # 自动打开前端页面
     frontend_url = f"http://localhost:{http_port}/frontend/index.html"
     webbrowser.open(frontend_url)
     print(f"Opening browser at {frontend_url}")
 
-    # WebSocket 服务作为前后端实时通信通道
     ws_port = 8765
     async with websockets.serve(ws_handler, "localhost", ws_port):
         print(f"WebSocket server running at ws://localhost:{ws_port}")

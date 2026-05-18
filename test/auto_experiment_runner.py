@@ -32,7 +32,7 @@ NUM_RUNS = 100
 BASE_SEED = 42
 
 # 输出目录：所有批量实验结果的 CSV 都保存在这里
-OUT_DIR = "batch_results"
+OUT_DIR = "batch_results2"
 
 
 # 定义三类实验场景

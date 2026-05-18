@@ -8,7 +8,7 @@ function initOrderPanel() {
   panel.innerHTML = `
     <div class="order-panel-wrapper">
       <div class="order-panel-header" id="orderPanelHeader">
-        <span class="order-panel-title">▶ Order Panel</span>
+        <span class="order-panel-title">v Order Panel</span>
       </div>
       <div class="order-panel-content" id="orderPanelContent">
         <div class="order-counts">
@@ -49,7 +49,6 @@ function initOrderPanel() {
     </div>
   `;
 
-  // Collapse toggle logic - collapse entire panel (content + background)
   const header = document.getElementById('orderPanelHeader');
   const content = document.getElementById('orderPanelContent');
   let isExpanded = true;
@@ -59,20 +58,20 @@ function initOrderPanel() {
     content.style.display = isExpanded ? 'flex' : 'none';
     panel.classList.toggle('order-panel-collapsed', !isExpanded);
     header.querySelector('.order-panel-title').textContent =
-      isExpanded ? '▼ Order Panel' : '▶ Order Panel';
+      isExpanded ? 'v Order Panel' : '> Order Panel';
   });
 
-  header.querySelector('.order-panel-title').textContent = '▼ Order Panel';
+  header.querySelector('.order-panel-title').textContent = 'v Order Panel';
 }
 
 function formatGenerationLog(entry) {
   const goodsStr = entry.goods_id != null ? ` goods ${entry.goods_id}` : '';
-  return `Order ${entry.order_id}${goodsStr} → receiver ${entry.receiver_id}`;
+  return `Order ${entry.order_id}${goodsStr} -> receiver ${entry.receiver_id}`;
 }
 
 function formatAssignmentLog(entry) {
   const boxStr = entry.box_id != null ? `(box ${entry.box_id})` : '';
-  return `Order ${entry.order_id} → AGV ${entry.agv_id} ${boxStr}`;
+  return `Order ${entry.order_id} -> AGV ${entry.agv_id} ${boxStr}`;
 }
 
 function formatCompletionLog(entry) {
@@ -99,24 +98,27 @@ function updateOrderPanel(ordersData) {
   const scrollToBottom = (el) => {
     if (el) el.scrollTop = el.scrollHeight;
   };
+
   if (genEl) {
     const items = (logs.generation || []).slice(-maxLogItems);
     genEl.innerHTML = items
-      .map((e) => `<div class="order-log-line">${formatGenerationLog(e)}</div>`)
+      .map((entry) => `<div class="order-log-line">${formatGenerationLog(entry)}</div>`)
       .join('') || '<div class="order-log-empty">None</div>';
     scrollToBottom(genEl);
   }
+
   if (assignEl) {
     const items = (logs.assignment || []).slice(-maxLogItems);
     assignEl.innerHTML = items
-      .map((e) => `<div class="order-log-line">${formatAssignmentLog(e)}</div>`)
+      .map((entry) => `<div class="order-log-line">${formatAssignmentLog(entry)}</div>`)
       .join('') || '<div class="order-log-empty">None</div>';
     scrollToBottom(assignEl);
   }
+
   if (completeEl) {
     const items = (logs.completion || []).slice(-maxLogItems);
     completeEl.innerHTML = items
-      .map((e) => `<div class="order-log-line">${formatCompletionLog(e)}</div>`)
+      .map((entry) => `<div class="order-log-line">${formatCompletionLog(entry)}</div>`)
       .join('') || '<div class="order-log-empty">None</div>';
     scrollToBottom(completeEl);
   }
@@ -125,26 +127,32 @@ function updateOrderPanel(ordersData) {
   const progressEl = document.getElementById('agvProgressList');
   if (progressEl) {
     progressEl.innerHTML = agvProgress
-      .map((p) => {
-        const progress = Math.round((p.progress || 0) * 100);
-        let statusStr = '-';
-        if (p.task_type === 'pick') {
-          statusStr = p.order_id != null ? `Picking Order ${p.order_id}` : 'Picking';
-        } else if (p.task_type === 'handover') {
-          statusStr = p.order_id != null ? `Delivering Order ${p.order_id}` : 'Delivering';
-        } else if (p.task_type === 'place') {
-          statusStr = 'Returning';
+      .map((progressItem) => {
+        const progress = Math.round((progressItem.progress || 0) * 100);
+        let statusText = '-';
+
+        if (progressItem.task_type === 'pick') {
+          statusText = progressItem.order_id != null
+            ? `Picking Order ${progressItem.order_id}`
+            : 'Picking';
+        } else if (progressItem.task_type === 'handover') {
+          statusText = progressItem.order_id != null
+            ? `Delivering Order ${progressItem.order_id}`
+            : 'Delivering';
+        } else if (progressItem.task_type === 'place') {
+          statusText = 'Returning';
         }
+
         return `
           <div class="agv-progress-row">
-            <span class="agv-progress-id">AGV ${p.agv_id}</span>
+            <span class="agv-progress-id">AGV ${progressItem.agv_id}</span>
             <div class="agv-progress-bar-wrap">
               <div class="agv-progress-bar">
                 <div class="agv-progress-fill" style="width: ${progress}%"></div>
                 <div class="agv-progress-dot" style="left: ${progress}%"></div>
               </div>
             </div>
-            <span class="agv-progress-order">${statusStr}</span>
+            <span class="agv-progress-order">${statusText}</span>
           </div>
         `;
       })

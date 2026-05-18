@@ -1,6 +1,6 @@
 // scene.js
-import { SafePathRenderer } from './entities/safePathRenderer.js';
-import { OrbitControls } from "https://unpkg.com/three@0.112/examples/jsm/controls/OrbitControls.js";
+import { SafePathRenderer } from './entities/safePathRenderer.js?v=20260512b';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 

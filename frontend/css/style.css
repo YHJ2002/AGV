@@ -1,90 +1,255 @@
-/* =============================== 
-  全局布局
-================================= */
+html,
 body {
+  width: 100%;
+  height: 100%;
   margin: 0;
-  overflow: hidden; /* 避免出现滚动条 */
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 32%),
+    linear-gradient(180deg, #0a1018 0%, #111827 45%, #0f172a 100%);
+  color: #e5eef9;
 }
 
 #container {
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  inset: 0;
 }
 
-/* ===============================
-  控制面板主框
-================================= */
 #panel {
   position: absolute;
   top: 20px;
-  left: 20px; /* 放在左上角，可改为 right: 20px 放右上角 */
-  width: 260px;
-  background: rgba(81, 69, 81, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  color: #f0f0f0;
+  left: 20px;
+  width: 320px;
+  background: linear-gradient(180deg, rgba(10, 18, 30, 0.92), rgba(15, 23, 42, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
   font-family: "Segoe UI", Roboto, sans-serif;
-  padding: 16px;
+  padding: 18px;
   z-index: 100;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(14px);
   cursor: grab;
   user-select: none;
 }
 
-#panel h2 {
-  font-size: 18px;
-  margin-bottom: 12px;
-  color: #aaa6fa;
+.panel-header {
+  margin-bottom: 14px;
 }
 
-/* ===============================
-  顶部控制按钮区
-================================= */
+.panel-eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+#panel h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #f8fafc;
+}
+
+.panel-section {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.panel-section-primary {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(34, 197, 94, 0.08));
+}
+
+.section-caption {
+  margin-bottom: 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
 #panel button {
   width: 100px;
-  margin: 6px 6px 12px 0;
-  padding: 8px;
+  margin: 6px 6px 0 0;
+  padding: 10px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
   color: white;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, transform 0.12s, box-shadow 0.2s;
 }
 
 #panel button:hover {
-  transform: scale(1.05);
+  transform: translateY(-1px);
   filter: brightness(1.1);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.24);
 }
 
-/* 特定功能按钮颜色 */
+#panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+.basic-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.basic-controls button {
+  flex: 1;
+  min-width: 120px;
+}
+
+.algorithm-section {
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 34%),
+    rgba(15, 23, 42, 0.82);
+}
+
+.algorithm-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.algorithm-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.algorithm-status-pill[data-state="dirty"] {
+  background: rgba(250, 204, 21, 0.18);
+  color: #fde68a;
+}
+
+.algorithm-status-pill[data-state="pending"] {
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+}
+
+.algorithm-status-pill[data-state="error"] {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+}
+
+.algorithm-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.algorithm-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.select-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.select-field span {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.select-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.82);
+  color: #f8fafc;
+  font-size: 13px;
+  outline: none;
+}
+
+.select-field select:focus {
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.algorithm-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.primary-btn {
+  min-width: 92px;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+}
+
+.algorithm-meta {
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
 #toggleBtn {
-  background-color: #4caf50; /* 绿色运行 */
-}
-#toggleBtn.paused {
-  background-color: #e97550; /* 红色暂停 */
-}
-#stepBtn {
-  background-color: #4171f9; /* 蓝色 Step */
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
-/* 新增：Damage / Repair 按钮样式 */
+#toggleBtn.paused {
+  background: linear-gradient(135deg, #fb7185, #f97316);
+}
+
+#stepBtn {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+}
+
 #damageBtn {
-  background-color: #f2eded; /* 红色 - 损坏 */
+  background-color: #f2eded;
   color: #020202 !important;
 }
+
 #repairBtn {
-  background-color: #ebedef; /* 蓝色 - 修复 */
+  background-color: #ebedef;
   color: #111111 !important;
 }
-/* 停止模拟按钮样式 */
+
 .stop-section {
   margin-top: 15px;
   text-align: center;
+  display: flex;
+  gap: 10px;
 }
 
 .stop-btn {
-  background-color: #d580f9;
+  flex: 1;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -95,12 +260,12 @@ body {
 }
 
 .stop-btn:hover {
-  background-color: #d580f9;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
 }
 
-/* Reset 按钮 - 绿色，和 Stop 并排 */
 .reset-btn {
-  background-color: #52ba89;     /* 鲜绿色 */
+  flex: 1;
+  background: linear-gradient(135deg, #34d399, #059669);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -108,12 +273,11 @@ body {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  margin-left: 8px;              /* 与 Stop 按钮间隔 */
+  margin-left: 0;
 }
 
 .reset-btn:hover {
-  background-color: #2ecc71;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #34d399, #059669);
 }
 
 .reset-btn:disabled {
@@ -122,48 +286,42 @@ body {
   transform: none;
 }
 
-/* 默认灰色按钮（其余按钮）
-#panel button:not(#toggleBtn):not(#stepBtn):not(#damageBtn):not(#repairBtn) {
-  background-color: #666;
-} */
-
-/* ===============================
-  折叠面板通用样式
-================================= */
 .collapsible {
   margin-top: 10px;
-  border-top: 1px solid #555;
-  padding-top: 5px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  padding-top: 8px;
 }
 
 .collapsible-header {
   cursor: pointer;
   font-weight: bold;
   font-size: 14px;
-  color: #ddd;
+  color: #dbeafe;
   padding: 5px 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+}
+
+.collapsible-header::before {
+  content: attr(data-icon);
+  margin-right: 8px;
+  color: #7dd3fc;
 }
 
 .collapsible-content {
   display: none;
   margin-top: 5px;
   font-size: 13px;
-  color: #ccc;
+  color: #cbd5e1;
 }
 
-/* ===============================
-   输入框样式
-================================= */
 input[type="number"] {
   width: 100px;
   margin-right: 5px;
-  background: #f0ebeb;
-  border: 1px solid #555;
-  border-radius: 4px;
-  padding: 3px 5px;
+  background: rgba(241, 245, 249, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 8px;
+  padding: 7px 9px;
   font-size: 13px;
   color: #333;
 }
@@ -175,9 +333,6 @@ input[type="number"] {
   pointer-events: none;
 }
 
-/* ===============================
-  Order Panel (top-right)
-================================= */
 #order-panel {
   position: absolute;
   top: 20px;
@@ -185,9 +340,10 @@ input[type="number"] {
   width: 300px;
   height: 85vh;
   max-height: 85vh;
-  background: rgba(69, 81, 99, 0.92);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.92));
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.42);
   color: #f0f0f0;
   font-family: "Segoe UI", Roboto, sans-serif;
   z-index: 100;
@@ -215,7 +371,7 @@ input[type="number"] {
   cursor: pointer;
   font-weight: bold;
   font-size: 16px;
-  color: #aaa6fa;
+  color: #7dd3fc;
   padding: 8px 0;
   margin-bottom: 8px;
   border-bottom: 1px solid #555;
@@ -240,21 +396,20 @@ input[type="number"] {
 }
 
 .order-panel-content::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   margin: 4px 4px 4px 0;
 }
 
 .order-panel-content::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
 }
 
 .order-panel-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-/* Order counts */
 .order-counts {
   display: flex;
   justify-content: space-between;
@@ -266,7 +421,7 @@ input[type="number"] {
   flex: 1;
   text-align: center;
   padding: 8px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
 
@@ -280,10 +435,9 @@ input[type="number"] {
 .order-count-value {
   font-size: 18px;
   font-weight: bold;
-  color: #7dd3fc;
+  color: #67e8f9;
 }
 
-/* Order logs section */
 .order-logs-section {
   display: flex;
   flex-direction: column;
@@ -295,7 +449,7 @@ input[type="number"] {
 .order-log-block {
   flex: 1;
   min-height: 85px;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 6px;
   padding: 6px 8px;
   display: flex;
@@ -325,12 +479,12 @@ input[type="number"] {
 }
 
 .order-log-list::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
 }
 
 .order-log-list::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 3px;
 }
 
@@ -346,7 +500,6 @@ input[type="number"] {
   font-style: italic;
 }
 
-/* AGV progress */
 .agv-progress-section {
   margin-top: 8px;
 }
@@ -383,7 +536,7 @@ input[type="number"] {
 .agv-progress-bar {
   position: relative;
   height: 8px;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   overflow: visible;
 }

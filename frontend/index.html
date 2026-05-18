@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WareRover</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260512b">
   <script type="importmap">
     {
       "imports": {
@@ -12,12 +13,28 @@
       }
     }
   </script>
+  <script>
+    window.addEventListener('error', function (event) {
+      var el = document.getElementById('boot-error');
+      if (!el) return;
+      el.style.display = 'block';
+      el.textContent = 'Frontend error: ' + (event.message || 'Unknown error');
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      var el = document.getElementById('boot-error');
+      if (!el) return;
+      el.style.display = 'block';
+      var reason = event.reason && event.reason.message ? event.reason.message : String(event.reason);
+      el.textContent = 'Frontend error: ' + reason;
+    });
+  </script>
 </head>
 <body>
+  <div id="boot-error" style="display:none;position:fixed;left:20px;bottom:20px;max-width:520px;padding:12px 14px;background:#7f1d1d;color:#fee2e2;font:13px/1.4 Segoe UI,Arial,sans-serif;border-radius:10px;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,.35);"></div>
   <div id="container"></div>
   <div id="panel"></div>
   <div id="order-panel"></div>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=20260512b"></script>
 </body>
 </html>
